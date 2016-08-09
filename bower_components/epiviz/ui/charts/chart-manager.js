@@ -142,18 +142,18 @@ epiviz.ui.charts.ChartManager.prototype.addChart = function(chartType, visConfig
   id = id || sprintf('%s-%s-%s', chartType.chartDisplayType(), chartType.chartHtmlAttributeName(), epiviz.utils.generatePseudoGUID(5));
   var css = chartType.cssClass();
 
-  var chartDisplayTypeContainer = $('#' + id);
-  var chartsAccordion = chartDisplayTypeContainer.find('.accordion');
-  var chartsContainer = chartsAccordion.find('.vis-container');
-  if (chartsAccordion.length == 0) {
-    chartsAccordion = $('<div class="accordion"></div>').appendTo(chartDisplayTypeContainer);
-    var displayType = chartType.chartDisplayType();
-    chartsAccordion.append(
-      sprintf('<h3><a href="#"><b><span style="color: #025167">Views by %s</span></b></a></h3>',
-        'ds'));
-    chartsContainer = $('<div class="vis-container"></div>').appendTo(chartsAccordion);
-    chartsAccordion.multiAccordion();
-    chartsAccordion.multiAccordion('option', 'active', 'all');
+  var chartDisplayTypeContainer = $('#feature-view');
+  // var chartsAccordion = chartDisplayTypeContainer.find('.accordion');
+  // var chartsContainer = chartsAccordion.find('.vis-container');
+  // if (chartsAccordion.length == 0) {
+  //   chartsAccordion = $('<div class="accordion"></div>').appendTo(chartDisplayTypeContainer);
+  //   var displayType = chartType.chartDisplayType();
+  //   chartsAccordion.append(
+  //     sprintf('<h3><a href="#"><b><span style="color: #025167">Views by %s</span></b></a></h3>',
+  //       'ds'));
+  //   chartsContainer = $('<div class="vis-container"></div>').appendTo(chartsAccordion);
+  //   chartsAccordion.multiAccordion();
+  //   chartsAccordion.multiAccordion('option', 'active', 'all');
     var self = this;
     // TODO: This doesn't go well with the icicle, because that requires a lot of drag & drop
     // TODO: Once we find a solution for it, re-enable the feature
@@ -168,10 +168,10 @@ epiviz.ui.charts.ChartManager.prototype.addChart = function(chartType, visConfig
         self._chartsOrderChanged.notify(self._chartsOrder);
       }
     });*/
-  }
+  //}
 
-  chartsContainer.append(sprintf('<div id="%s" class="%s"></div>', id, css));
-  var container = chartsContainer.find('#' + id);
+  chartDisplayTypeContainer.append(sprintf('<div id="%s" class="%s"></div>', id, css));
+  var container = chartDisplayTypeContainer.find('#' + id);
 
   chartProperties = chartProperties || new epiviz.ui.charts.VisualizationProperties(
     chartType.defaultWidth(), // width
@@ -665,6 +665,5 @@ epiviz.ui.charts.ChartManager.prototype.setChartSettings = function(id, settings
     chart.setColors(colorMap);
   }
 
-  chart.draw();
 };
 

@@ -303,6 +303,7 @@ epiviz.plugins.charts.ScatterPlot.prototype._drawCircles = function(range, data)
   selection
     .on('mouseover', function (d) {
       self._hover.notify(new epiviz.ui.charts.VisEventArgs(self.id(), d));
+      console.log(d);
     })
     .on('mouseout', function () {
       self._unhover.notify(new epiviz.ui.charts.VisEventArgs(self.id()));
