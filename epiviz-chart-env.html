@@ -1,0 +1,250 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script src="../lib/jquery/jquery-1.8.2.js"></script>
+<script src="../epiviz/datatypes/genomic-range.js"></script>
+
+
+<dom-module id="epiviz-chart-env">
+
+<template>
+	
+	<style>
+	:host{
+		display: inline-block;
+	}
+	</style>
+
+<!-- 	<span> data is fetched from {{dataUrl}} </span></br>
+	<span> data length is {{dataResponse.length}}</span></br>
+	<span>data is {{dataResponse}}</span>
+	<div> Data from data source is {{dataResponse}}</div> -->
+	<content id="chartEnv"></content>
+</template>
+
+<script>
+
+Polymer({
+	is:'epiviz-chart-env',
+	properties:{
+		measurement:{
+			type: Object,
+			notiffy: true,
+			reflectToAttribute:true
+		},
+		dataTemp:{
+			type: Object,
+			value: {},
+			notify: true
+		}
+	},
+
+	// Listeners for interaction between 2 graphs
+// listeners:{
+// 	'hover': 'onHover',
+// 	'unHover': 'onUnhover'
+// },
+
+// onHover: function(e){ 
+// 	// console.log("in onHover of chart-env");
+// 	this.fire('hoverAllCharts',
+// 		{data: e.detail} 
+// 	);
+// },
+
+// onUnhover: function(e) {
+// 	this.fire('unHoverAllCharts');
+// },
+
+ready: function(){
+		console.log("in ready function");
+	
+		this.scopeSubtree(this, true);
+
+		// var ds1 = this.measurement.firstDim.ds;
+		// var ds2 = this.measurement.secondDim.ds;
+
+		var self = this;
+
+		var measKeys = Object.keys(this.measurement);
+		console.log(measKeys);
+
+		// var dataManager = Polymer.dom(self).parentNode.querySelector('data-source[datasource-id$="' + m.ds + '"]');
+
+		// var validDs = true;
+		// var staticData = false;
+
+		measKeys.forEach(function(mk){
+			var currMea = self.measurement[mk]; // {ds : measurement}
+
+			var dataManagerElem = Polymer.dom(self).parentNode.querySelector('epiviz-data-source[provider-id$="' + currMea.dataprovider + '"]');
+			//console.log(dataManagerElem);
+
+
+			//var dataManager = dataManagerElem.getAttribute('epiviz-data-manager');
+			var dataManager = dataManagerElem.epivizDataManager;
+			console.log(dataManager);
+			var tempMSet = new epiviz.measurements.MeasurementSet();
+			 tempMSet.add(new epiviz.measurements.Measurement(
+              currMea.id,
+              currMea.name,
+              currMea.type,
+              currMea.datasourceId,
+              currMea.datasourceGroup,
+              'umd',
+              null,
+              null,
+              null,
+              currMea.minValue,
+              currMea.maxValue,
+              currMea.metadata
+            ));
+			
+
+			var tM = {};
+			tM[mk] = tempMSet;
+
+			var range = new epiviz.datatypes.GenomicRange("chr11",80000000,3000000);
+
+			dataManager.getData(range, tM, function(id, data) {
+				self[id] = data;
+				console.log(data);
+			});
+
+			// console.log(currMea);
+
+			// if(currMea.data != undefined && currMea.data != null) {
+			// 	console.log("inside currmeas.data");
+			// 	staticData = true;
+			// 	validDs = false;
+			// 	self.dataTemp[currMea.ds] = currMea.data;
+			// }
+			// else if (currMea.ds == null){
+			// 	validDs = validDs && false;
+			// 	console.log("You did not specify the data-source.");
+			// } 
+		
+		});
+
+		// if (validDs){
+		// 	this.asyncHandler = this.async(this.lookforDom, 1000);
+		// 	// this.lookforDom();
+		// }
+		// else if(staticData) {
+		// 	this._dataCreated();
+		// }
+},
+
+// Use Async method to check if data were fetched into the dom or not
+// if data were in the dom, bind them to chart-env, and cancel the listener
+// if data were not there, keep looking. 
+lookforDom : function() {
+
+
+	//self.measurements["firstDim"].loaded = true;
+
+	var self = this;
+
+	var allAvailable = true;
+
+	var measKeys = Object.keys(this.measurement); // firstDim, secondDim, thirdDim, ...
+
+	// console.log(measKeys);
+
+	measKeys.forEach(function(mk) {
+		m = self.measurement[mk]; // m = {ds: measurement}
+		var elem = Polymer.dom(self).parentNode.querySelector('data-source[datasource-id$="' + m.ds + '"]');
+		if(elem.dataResponse == undefined ) {
+			allAvailable = false;
+		}
+	});
+
+	// console.log(allAvailable);
+	// console.log(self.dataTemp);
+	// When all dataResponse are available, push them to dataTemp
+	if(allAvailable == true) {
+		this.cancelAsync(this.asyncHandler);
+		measKeys.forEach(function(mk) {
+			
+			m = self.measurement[mk];
+			self.dataTemp[m.ds] = null;
+			var elem = Polymer.dom(self).parentNode.querySelector('data-source[datasource-id$="' + m.ds + '"]');
+			self.dataTemp[m.ds] = elem.dataResponse; // should it be self.dataTemp[mk] ??
+		});
+
+		
+		// var ds1 = document.querySelector('data-source[datasource-id$="ds1"]');
+  //   	var ds2 = document.querySelector('data-source[datasource-id$="ds2"]');
+		// this.dataTempx = ds1.dataResponse;
+  //     	this.dataTempy = ds2.dataResponse;
+	}
+	// console.log(self.dataTemp);
+	this._dataCreated();
+
+},
+
+// Pre-processing data
+// dataRepsonse from  <data-source> will be processed , 
+// and bind them to dataX and dataY of chart  
+_dataCreated: function() {
+	// var dataXX = this.dataTempx;
+	// var dataYY = this.dataTempy;
+	// console.log("In dataCreated");
+	
+	var self = this;
+
+	var measKeys = Object.keys(this.measurement);
+
+	measKeys.forEach(function(mk){
+		var currMea = self.measurement[mk]; // {ds : measurement}]
+
+		// console.log(currMea);
+
+		data = self.dataTemp[currMea.ds];
+
+		self[mk] = [];
+		for(var i = 0; i < data.length; i++){
+			// console.log(data[i]);
+	          self[mk].push(data[i][currMea.measurement]);
+	     }
+	     // console.log(mk);
+	     // console.log(self[mk]);
+	});
+
+	// console.log(self);
+
+	var numChildren = self.getEffectiveChildren().length;
+	for(var index = 0; index < numChildren; index++){
+		var currentChild = self.getContentChildren('#chartEnv')[index];
+
+		// console.log(currentChild);
+
+		// console.log(currentChild.dimX);
+		// console.log(currentChild.dimY);
+		// console.log(self[currentChild.dimX]);
+		// console.log(self[currentChild.dimY]);
+		// console.log(currentChild.getAttribute("dim-x"));
+		// console.log(currentChild.getAttribute("dim-y"));
+
+		var tdx = currentChild.dimX || currentChild.getAttribute("dim-x");
+		var tdy = currentChild.dimY || currentChild.getAttribute("dim-y");
+
+		currentChild.dataX = self[tdx];
+		currentChild.dataY = self[tdy];
+		// currentChild.dataX = self["firstDim"];
+		// currentChild.dataY = self["secondDim"];
+		// console.log("in data created adding data to charts");
+	}												 
+}
+
+});
+
+
+
+
+
+	
+
+
+</script>
+
+</dom-module>
