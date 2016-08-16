@@ -56,17 +56,17 @@ Polymer({
 	},
 
 	// Listeners for interaction between 2 graphs
-// listeners:{
-// 	'hover': 'onHover',
-// 	'unHover': 'onUnhover'
-// },
+listeners:{
+	'hover': 'onHover',
+	'unHover': 'onUnhover'
+},
 
-// onHover: function(e){ 
-// 	// console.log("in onHover of chart-env");
-// 	this.fire('hoverAllCharts',
-// 		{data: e.detail} 
-// 	);
-// },
+onHover: function(e){ 
+	// console.log("in onHover of chart-env");
+	this.fire('hoverAllCharts',
+		{data: e.detail} 
+	);
+},
 
 // onUnhover: function(e) {
 // 	this.fire('unHoverAllCharts');

@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+  <head>
+    <title>epiviz-scatter-plot-2 demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+
+    <link rel="import" href="../epiviz-data-source.html">
+    <link rel="import" href="../epiviz-chart-env.html">
+    <link rel="import" href="../epiviz-scatter-plot.html">
+
+    
+  </head>
+  <body>
+
+    <!-- <div class="vertical-section-container centered"> -->
+      <h3>Basic epiviz-data-source Demo</h3>
+     <!--  <demo-snippet>
+        <template> -->
+          <epiviz-data-source provider-type="epiviz.data.WebServerDataProvider" provider-id="umd" provider-url="http://epiviz.cbcb.umd.edu/data/main.php"></epiviz-data-source>
+
+          <epiviz-chart-env measurement='{"affy1":{
+                    "id":"cancer",
+                    "name":"Expression Colon Cancer",
+                    "type":"feature",
+                    "datasourceId":"gene_expression",
+                    "datasourceGroup":"affymetrix_probeset",
+                    "dataprovider":"umd",
+                    "formula":null,
+                    "defaultChartType":null,
+                    "annotation":null,
+                    "minValue":-3,
+                    "maxValue":20,
+                    "metadata":["probe"]
+                },
+                "affy2":{
+                    "id":"normal",
+                    "name":"Expression Colon Normal",
+                    "type":"feature",
+                    "datasourceId":"gene_expression",
+                    "datasourceGroup":"affymetrix_probeset",
+                    "dataprovider":"umd",
+                    "formula":null,
+                    "defaultChartType":null,
+                    "annotation":null,
+                    "minValue":-3,
+                    "maxValue":20,
+                    "metadata":["probe"]
+                }}'>
+                <epiviz-scatter-plot id="chart1" dim-x="affy1" dim-y="affy2" settings='{"xMin":0.01, "xMax":0.9, "yMin":1, "yMax":10}'></epiviz-scatter-plot>
+              </epiviz-chart-env>
+       <!--  </template>
+      </demo-snippet> -->
+    <!-- </div> -->
+   <!--  <h3>Another epiviz-scatter-plot-2 Demo</h3>
+     
+
+    <epiviz-scatter-plot-2></epiviz-scatter-plot-2> -->
+       <!--  </template>
+
+  </body>
+</html>

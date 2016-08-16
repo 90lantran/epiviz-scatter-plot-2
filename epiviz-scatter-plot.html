@@ -1,0 +1,324 @@
+<link rel="import" href="../polymer/polymer.html">
+<script src="../lib/jquery/jquery-1.8.2.js"></script>
+<script src="../lib/d3/d3.v3.js"></script>
+
+<dom-module id="epiviz-scatter-plot">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .axis path,
+      .axis line{
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+      }
+
+      .axis text {
+        font-family: : sans-serif;
+        font-size:  13px;
+      }
+    </style>
+
+    <div id="{{plotID}}"> </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: "epiviz-scatter-plot",
+
+      properties: {
+      	settings: {
+      		type: Object,
+      		notify: true
+      	},
+
+        dataX: {
+          type: Array,
+          reflectToAttribute: true,
+          notify: true
+        },
+
+        dataY:{
+          type: Array,
+          reflectToAttribute: true,
+          notify: true
+        },
+
+        dimX: {
+          type: String,
+          notify: true
+        },
+
+        dimY: {
+          type: String,
+          notify: true
+        },
+
+        plotID:{
+          type: String,
+          value: function(){
+          return 'ERFabc' + Math.floor((Math.random() * 10000) + 1) ;
+
+          }
+        },
+
+      },
+
+      highlight: function(e){
+        var self = this;
+        console.log(e);
+        console.log(this.plotID);
+        var d3Node = this.$$('#' + this.plotID);
+        var d3Svg = d3.select(d3Node).select("svg");
+
+        var event = e.detail.data.data;
+
+        console.log(e.detail.data);
+
+        if(event[self.dimX]) {
+
+          var selNodes = d3Svg.selectAll('circle').filter(function(d) {
+            if(d[self.dimX] == event[self.dimX]) {
+              return true;
+            }
+
+            return false;
+          });
+
+          selNodes.attr("fill", "yellow").attr("stroke", "orange");
+
+        }
+        if(event[self.dimY]) {
+          var selNodes = d3Svg.selectAll('circle').filter(function(d) {
+            if(d[self.dimY] == event[self.dimY]) {
+              return true;
+            }
+            return false;
+          });
+          selNodes.attr("fill", "yellow").attr("stroke", "orange");
+        }
+      },
+
+      unHighlight: function() {
+        var d3Node = this.$$('#' + this.plotID);
+        var d3Svg = d3.select(d3Node).select("svg");
+
+        d3Svg.selectAll('circle').attr("fill", "red").attr("stroke", "blue");
+
+
+      },
+
+      ready: function() {
+
+        var self = this;
+
+        this.scopeSubtree(this.$$('#' + this.plotID), true);
+
+
+        var parent = this.parentNode;
+
+        parent.addEventListener('hoverAllCharts', function(e) {
+          self.highlight(e);
+        }.bind(this));
+
+        parent.addEventListener('unHoverAllCharts', function(e) {
+          self.unHighlight(e);
+        }.bind(this));
+
+        // if(this.dataX != null && this.dataX.length > 0 && this.dataY != null && this.dataY.length > 0 ) {
+        //     console.log("call draw from ready");
+        //   this._draw();
+        // }
+        // else {
+        //   console.log("no data");
+        // }
+      },
+
+      observers:[
+        '_dataXChanged(dataX.*)',
+        '_dataYChanged(dataY.*)'
+      ],
+
+
+      _dataXChanged: function(changeX, index){
+
+         if(this.dataX!= null && this.dataX.length > 0 && this.dataY!= null && this.dataY.length > 0 ) {
+            console.log("in _dataXChanged, will draw again");
+            this._draw();
+          }
+      },
+
+      _dataYChanged: function(changeY, index){
+
+         if(this.dataX!= null && this.dataX.length > 0 && this.dataY!= null && this.dataY.length > 0) {
+            console.log("in _dataYChanged, will draw again");
+            this._draw();
+          }
+      },
+
+      inRange: function(data,xMin, xMax){
+      	if(data >= xMin && data <= xMax){
+      		return true;
+      	} else {
+      		return false;
+      	}
+      },
+
+      isCollapse: function(x1,y1,x2,y2,radius){
+      	if(Math.sqrt((x2 - x1)**2 + (y2 - y1)**2) >= radius){
+      		return  false;
+      	} else {
+      		return true;
+      	}
+      },
+
+      _draw: function(){
+        console.log("in _draw function");
+        var self = this;
+        var width = 300;
+        var height = 300;
+        var padding = 30;
+
+        var xMin = this.settings.xMin;
+        var xMax = this.settings.xMax;
+        var yMin = this.settings.yMin;
+        var yMax = this.settings.yMax;
+        console.log(self.dataX.length);
+
+        var tx = [];
+        var ty= [];
+
+        for(var i = 0; i < self.dataX.length ; i++){
+        	if (self.inRange(self.dataX[i], xMin, xMax)){
+        		tx.push(self.dataX[i]);
+        		console.log("in for loop");
+        	}
+        }
+
+          for(var i = 0 ; i < self.dataY.length ; i++){
+        	if (self.inRange(self.dataY[i], yMin, yMax)){
+        		ty.push(self.dataY[i]);
+        	}
+        }
+
+        var dataX = tx;
+        var dataY = ty;   
+
+        console.log(dataX);
+        console.log(dataY);
+
+        // key point is here
+        // make an array dimension : value
+        var ttData = [];
+
+        for (var i = 0; i< Math.min(dataX.length, dataY.length); i++) {
+          var ttlist = {};
+          ttlist[self.dimX] = dataX[i];
+          ttlist[self.dimY] = dataY[i];
+          ttData.push(ttlist);
+        }
+        console.log(ttData);
+        // collapsing
+        // i think my logic here is wrong
+        // I try to think for a better one
+         var tData = [];
+        // for (var i = 0; i < ttData.length - 1 ; i++){
+        // 	for (var j = i + 1; j < ttData.length ; j++){
+        // 		if (){
+        // 			var ttlist ={};
+        // 			ttlist[self.dimX] = ttData[i][self.dimX];
+        //   			ttlist[self.dimY] = ttData[i][self.dimY];
+        //   			tData.push(ttlist);
+        // 		} else{
+        // 			tData.push(ttData[i]);
+        // 		}
+        // 	}
+        // }
+
+        for (var i = 0; i < ttData.length ; i++){
+        	if (self.isCollapse(ttData[i][self.dimX],ttData[i][self.dimY],ttData[i+1][self.dimX],ttData[i+1][self.dimY],6)){
+        		var ttlist = {};
+        		ttlist[self.dimX] = ttData[i][self.dimX];
+          		ttlist[self.dimY] = ttData[i][self.dimY];
+          		tData.push(ttlist);
+          		i++;
+        	} else {
+        		var ttlist = {};
+        		ttlist[self.dimX] = ttData[i][self.dimX];
+          		ttlist[self.dimY] = ttData[i][self.dimY];
+          		tData.push(ttlist);
+        	}
+        }
+
+
+        console.log(tData);
+
+        self.maxx = d3.max(dataX);
+        self.minx = d3.min(dataX);
+
+        self.maxy = d3.max(dataY);
+        self.miny = d3.min(dataY);
+        
+        var scaleX = d3.scale.linear().domain([0, d3.max(dataX, function(d){ return d;})]).range([padding,width - padding]);
+        var scaleY = d3.scale.linear().domain([0, d3.max(dataY, function(d){ return d;})]).range([height-padding, padding]);
+
+
+        self.scaleX = scaleX;
+        self.scaleY = scaleY;
+
+        console.log(this.plotID);
+
+        var d3Node = this.$$('#' + this.plotID);
+
+        d3.select(d3Node).selectAll('svg').remove();
+
+        var svg = d3.select(d3Node).append("svg")
+                      .attr("width", width)
+                      .attr("height", height);
+        console.log(svg);
+        var xAxis = d3.svg.axis();
+        xAxis.scale(scaleX).orient("bottom").ticks(dataX.length);
+      
+        var yAxis = d3.svg.axis();
+        yAxis.scale(scaleY).orient("left").ticks(dataY.length);              
+
+        svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0," + (height - padding) + ")")
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(" + padding + ",0)")
+            .call(yAxis);
+
+        var circles = svg.selectAll("circle")
+        .data(tData)
+        .enter()
+        .append("circle");
+        circles.attr("cx", function(d, i) { 
+                        return scaleX(d[self.dimX]);
+                })
+                .attr("cy", function(d, i){
+                        return scaleY(d[self.dimY]);
+                }) 
+                .attr("r", 3.5)
+                .attr("fill", "red").attr("stroke", "blue").attr("stroke-width", 2)
+                .on("mouseover", function(d){
+                  console.log(d);
+                  self.fire('hover',{data: d});
+                  var detail = {data: d};
+                  self.highlight({'detail': {'data': detail}});
+                  d3.select(this).attr("fill", "yellow").attr("stroke", "orange");
+                })
+                .on("mouseout", function(d) {
+                  self.fire('unHover');
+                  d3.select(this).attr("fill", "red").attr("stroke", "blue");
+                });
+      }
+    });
+  </script>
+</dom-module>
