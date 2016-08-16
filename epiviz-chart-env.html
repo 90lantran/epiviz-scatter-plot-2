@@ -1,7 +1,24 @@
 <link rel="import" href="../polymer/polymer.html">
 
 <script src="../lib/jquery/jquery-1.8.2.js"></script>
-<script src="../epiviz/datatypes/genomic-range.js"></script>
+
+
+ <script src="../epiviz/datatypes/seq-info.js"></script>
+    <script src="../epiviz/datatypes/genomic-array.js"></script>
+    <script src="../epiviz/datatypes/genomic-range-array.js"></script>
+    <script src="../epiviz/datatypes/feature-value-array.js"></script>
+    <script src="../epiviz/datatypes/partial-summarized-experiment.js"></script>
+    <script src="../epiviz/datatypes/measurement-genomic-data.js"></script>
+    <script src="../epiviz/datatypes/measurement-genomic-data-wrapper.js"></script>
+    <script src="../epiviz/datatypes/measurement-genomic-data-array-wrapper.js"></script>
+    <script src="../epiviz/datatypes/genomic-data.js"></script>
+    <script src="../epiviz/datatypes/row-item-impl.js"></script>
+    <script src="../epiviz/datatypes/map-genomic-data.js"></script>
+    <script src="../epiviz/datatypes/item-filtered-genomic-data.js"></script>
+    <script src="../epiviz/datatypes/measurement-ordered-genomic-data.js"></script>
+    <script src="../epiviz/datatypes/measurement-aggregated-genomic-data.js"></script>
+    <script src="../epiviz/datatypes/genomic-range.js"></script>
+
 
 
 <dom-module id="epiviz-chart-env">
@@ -84,7 +101,7 @@ ready: function(){
 			var dataManager = dataManagerElem.epivizDataManager;
 			console.log(dataManager);
 			var tempMSet = new epiviz.measurements.MeasurementSet();
-			 tempMSet.add(new epiviz.measurements.Measurement(
+			var tempMea = new epiviz.measurements.Measurement(
               currMea.id,
               currMea.name,
               currMea.type,
@@ -97,7 +114,9 @@ ready: function(){
               currMea.minValue,
               currMea.maxValue,
               currMea.metadata
-            ));
+            );
+			 
+			tempMSet.add(tempMea);
 			
 
 			var tM = {};
@@ -105,10 +124,43 @@ ready: function(){
 
 			var range = new epiviz.datatypes.GenomicRange("chr11",80000000,3000000);
 
-			dataManager.getData(range, tM, function(id, data) {
-				self[id] = data;
+			var webProvider = dataManager._dataProviderFactory._providers[currMea.dataprovider];
+
+			console.log(webProvider);
+
+			// console.log(dataManager.);
+
+			var dataRequest = currMea.type == 'range'? epiviz.data.Request.getRows(tempMea, range) : epiviz.data.Request.getValues(tempMea, range);
+
+			console.log(dataRequest);
+
+			webProvider.getData(dataRequest, function(data) {
 				console.log(data);
+
+				self[mk] = data._data.values;
+
+				self._dataCreated();
 			});
+
+
+			// var dataX =[];
+			// var dataY = [];
+			// dataManager.getData(range, tM, function(id, data) {
+			// 	console.log(data);
+			// 	console.log(data._map._measurementTree.umd.feature.affymetrix_probeset.gene_expression.cancer.value._container._end);
+
+			// 	if (data._map._measurementTree.umd.feature.affymetrix_probeset.gene_expression.cancer != undefined){	
+			// 		dataX.push(data._map._measurementTree.umd.feature.affymetrix_probeset.gene_expression.cancer.value._container._end);
+			// 		console.log(dataX);
+			// 	}
+
+			// 	if (data._map._measurementTree.umd.feature.affymetrix_probeset.gene_expression.normal != undefined){
+			// 		dataY.push(data._map._measurementTree.umd.feature.affymetrix_probeset.gene_expression.normal.value._container._end);
+			// 		console.log(dataY);
+			// 	}
+			// });
+
+
 
 			// console.log(currMea);
 
@@ -137,50 +189,50 @@ ready: function(){
 // Use Async method to check if data were fetched into the dom or not
 // if data were in the dom, bind them to chart-env, and cancel the listener
 // if data were not there, keep looking. 
-lookforDom : function() {
+// lookforDom : function() {
 
 
-	//self.measurements["firstDim"].loaded = true;
+// 	//self.measurements["firstDim"].loaded = true;
 
-	var self = this;
+// 	var self = this;
 
-	var allAvailable = true;
+// 	var allAvailable = true;
 
-	var measKeys = Object.keys(this.measurement); // firstDim, secondDim, thirdDim, ...
+// 	var measKeys = Object.keys(this.measurement); // firstDim, secondDim, thirdDim, ...
 
-	// console.log(measKeys);
+// 	// console.log(measKeys);
 
-	measKeys.forEach(function(mk) {
-		m = self.measurement[mk]; // m = {ds: measurement}
-		var elem = Polymer.dom(self).parentNode.querySelector('data-source[datasource-id$="' + m.ds + '"]');
-		if(elem.dataResponse == undefined ) {
-			allAvailable = false;
-		}
-	});
+// 	measKeys.forEach(function(mk) {
+// 		m = self.measurement[mk]; // m = {ds: measurement}
+// 		var elem = Polymer.dom(self).parentNode.querySelector('data-source[datasource-id$="' + m.ds + '"]');
+// 		if(elem.dataResponse == undefined ) {
+// 			allAvailable = false;
+// 		}
+// 	});
 
-	// console.log(allAvailable);
-	// console.log(self.dataTemp);
-	// When all dataResponse are available, push them to dataTemp
-	if(allAvailable == true) {
-		this.cancelAsync(this.asyncHandler);
-		measKeys.forEach(function(mk) {
+// 	// console.log(allAvailable);
+// 	// console.log(self.dataTemp);
+// 	// When all dataResponse are available, push them to dataTemp
+// 	if(allAvailable == true) {
+// 		this.cancelAsync(this.asyncHandler);
+// 		measKeys.forEach(function(mk) {
 			
-			m = self.measurement[mk];
-			self.dataTemp[m.ds] = null;
-			var elem = Polymer.dom(self).parentNode.querySelector('data-source[datasource-id$="' + m.ds + '"]');
-			self.dataTemp[m.ds] = elem.dataResponse; // should it be self.dataTemp[mk] ??
-		});
+// 			m = self.measurement[mk];
+// 			self.dataTemp[m.ds] = null;
+// 			var elem = Polymer.dom(self).parentNode.querySelector('data-source[datasource-id$="' + m.ds + '"]');
+// 			self.dataTemp[m.ds] = elem.dataResponse; // should it be self.dataTemp[mk] ??
+// 		});
 
 		
-		// var ds1 = document.querySelector('data-source[datasource-id$="ds1"]');
-  //   	var ds2 = document.querySelector('data-source[datasource-id$="ds2"]');
-		// this.dataTempx = ds1.dataResponse;
-  //     	this.dataTempy = ds2.dataResponse;
-	}
-	// console.log(self.dataTemp);
-	this._dataCreated();
+// 		// var ds1 = document.querySelector('data-source[datasource-id$="ds1"]');
+//   //   	var ds2 = document.querySelector('data-source[datasource-id$="ds2"]');
+// 		// this.dataTempx = ds1.dataResponse;
+//   //     	this.dataTempy = ds2.dataResponse;
+// 	}
+// 	// console.log(self.dataTemp);
+// 	this._dataCreated();
 
-},
+// },
 
 // Pre-processing data
 // dataRepsonse from  <data-source> will be processed , 
@@ -192,23 +244,23 @@ _dataCreated: function() {
 	
 	var self = this;
 
-	var measKeys = Object.keys(this.measurement);
+	// var measKeys = Object.keys(this.measurement);
 
-	measKeys.forEach(function(mk){
-		var currMea = self.measurement[mk]; // {ds : measurement}]
+	// measKeys.forEach(function(mk){
+	// 	var currMea = self.measurement[mk]; // {ds : measurement}]
 
-		// console.log(currMea);
+	// 	// console.log(currMea);
 
-		data = self.dataTemp[currMea.ds];
+	// 	data = self.dataTemp[currMea.ds];
 
-		self[mk] = [];
-		for(var i = 0; i < data.length; i++){
-			// console.log(data[i]);
-	          self[mk].push(data[i][currMea.measurement]);
-	     }
-	     // console.log(mk);
-	     // console.log(self[mk]);
-	});
+	// 	self[mk] = [];
+	// 	for(var i = 0; i < data.length; i++){
+	// 		// console.log(data[i]);
+	//           self[mk].push(data[i][currMea.measurement]);
+	//      }
+	//      // console.log(mk);
+	//      // console.log(self[mk]);
+	// });
 
 	// console.log(self);
 

@@ -1,0 +1,256 @@
+<link rel="import" href="../polymer/polymer.html">
+<script src="../lib/jquery/jquery-1.8.2.js"></script>
+<script src="../lib/d3/d3.v3.js"></script> 
+<dom-module id="my-chart">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .axis path,
+      .axis line{
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+      }
+
+      .axis text {
+        font-family: : sans-serif;
+        font-size:  13px;
+      }
+    </style>
+
+    <div id="{{plotID}}"> </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: "my-chart",
+
+      properties: {
+        dataX: {
+          type: Array,
+          reflectToAttribute: true,
+          notify: true
+        },
+
+        dataY:{
+          type: Array,
+          reflectToAttribute: true,
+          notify: true
+        },
+
+        dimX: {
+          type: String,
+          notify: true
+        },
+
+        dimY: {
+          type: String,
+          notify: true
+        },
+
+        plotID:{
+          type: String,
+          value: function(){
+          return 'ERFabc' + Math.floor((Math.random() * 10000) + 1) ;
+
+          }
+        },
+
+      },
+
+      highlight: function(e){
+        var self = this;
+        console.log(e);
+        console.log(this.plotID);
+        var d3Node = this.$$('#' + this.plotID);
+        var d3Svg = d3.select(d3Node).select("svg");
+
+        var event = e.detail.data.data;
+
+        console.log(e.detail.data);
+
+        if(event[self.dimX]) {
+
+          var selNodes = d3Svg.selectAll('circle').filter(function(d) {
+            if(d[self.dimX] == event[self.dimX]) {
+              return true;
+            }
+
+            return false;
+          });
+
+          selNodes.attr("fill", "yellow").attr("stroke", "orange");
+
+        }
+        if(event[self.dimY]) {
+          var selNodes = d3Svg.selectAll('circle').filter(function(d) {
+            if(d[self.dimY] == event[self.dimY]) {
+              return true;
+            }
+            return false;
+          });
+          selNodes.attr("fill", "yellow").attr("stroke", "orange");
+        }
+      },
+
+      unHighlight: function() {
+        var d3Node = this.$$('#' + this.plotID);
+        var d3Svg = d3.select(d3Node).select("svg");
+
+        d3Svg.selectAll('circle').attr("fill", "red").attr("stroke", "blue");
+
+
+      },
+
+      ready: function() {
+
+        var self = this;
+
+        this.scopeSubtree(this.$$('#' + this.plotID), true);
+
+
+        var parent = this.parentNode;
+
+        parent.addEventListener('hoverAllCharts', function(e) {
+          self.highlight(e);
+        }.bind(this));
+
+        parent.addEventListener('unHoverAllCharts', function(e) {
+          self.unHighlight(e);
+        }.bind(this));
+
+        // if(this.dataX != null && this.dataX.length > 0 && this.dataY != null && this.dataY.length > 0 ) {
+        //     console.log("call draw from ready");
+        //   this._draw();
+        // }
+        // else {
+        //   console.log("no data");
+        // }
+      },
+
+      observers:[
+        '_dataXChanged(dataX.*)',
+        '_dataYChanged(dataY.*)'
+      ],
+
+
+      _dataXChanged: function(changeX, index){
+
+         if(this.dataX!= null && this.dataX.length > 0 && this.dataY!= null && this.dataY.length > 0 ) {
+            console.log("in _dataXChanged, will draw again");
+            this._draw();
+          }
+      },
+
+      _dataYChanged: function(changeY, index){
+
+         if(this.dataX!= null && this.dataX.length > 0 && this.dataY!= null && this.dataY.length > 0) {
+            console.log("in _dataYChanged, will draw again");
+            this._draw();
+          }
+      },
+
+      _draw: function(){
+        console.log("in _draw function");
+        var self = this;
+        var width = 300;
+        var height = 300;
+        var padding = 30;
+
+        var dataX = this.dataX;
+        var dataY = this.dataY;
+
+        console.log(dataX);
+        console.log(dataY);
+
+        // line 174 - 179, just for the demo component_plot.html
+        // may remove later
+        if (self.dimX == undefined){
+            self.dimX = "firstDim";
+        }
+        if (self.dimY == undefined){
+            self.dimY = "secondDim";
+        }
+
+        // key point is here
+        // make an array dimension : value
+        var tData = [];
+
+        for (var i = 0; i< dataX.length; i++) {
+          var ttlist = {};
+          ttlist[self.dimX] = dataX[i];
+          ttlist[self.dimY] = dataY[i];
+          tData.push(ttlist);
+        }
+
+        console.log(tData);
+
+        self.maxx = d3.max(dataX);
+        self.minx = d3.min(dataX);
+
+        self.maxy = d3.max(dataY);
+        self.miny = d3.min(dataY);
+        
+        var scaleX = d3.scale.linear().domain([self.minx, self.maxx]).range([padding,width - padding]);
+        var scaleY = d3.scale.linear().domain([self.miny, self.maxy]).range([height-padding, padding]);
+
+
+        self.scaleX = scaleX;
+        self.scaleY = scaleY;
+
+        console.log(this.plotID);
+
+        var d3Node = this.$$('#' + this.plotID);
+
+        d3.select(d3Node).selectAll('svg').remove();
+
+        var svg = d3.select(d3Node).append("svg")
+                      .attr("width", width)
+                      .attr("height", height);
+        console.log(svg);
+        var xAxis = d3.svg.axis();
+        xAxis.scale(scaleX).orient("bottom").ticks(Math.ceil(self.maxx) - Math.floor(self.minx));
+      
+        var yAxis = d3.svg.axis();
+        yAxis.scale(scaleY).orient("left").ticks(Math.ceil(self.maxy) - Math.floor(self.miny));              
+
+        svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0," + (height - padding) + ")")
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(" + padding + ",0)")
+            .call(yAxis);
+
+        var circles = svg.selectAll("circle")
+        .data(tData)
+        .enter()
+        .append("circle");
+        circles.attr("cx", function(d, i) { 
+                        return scaleX(d[self.dimX]);
+                })
+                .attr("cy", function(d, i){
+                        return scaleY(d[self.dimY]);
+                }) 
+                .attr("r", 3.5)
+                .attr("fill", "red").attr("stroke", "blue").attr("stroke-width", 2)
+                .on("mouseover", function(d){
+                  console.log(d);
+                  self.fire('hover',{data: d});
+                  var detail = {data: d};
+                  self.highlight({'detail': {'data': detail}});
+                  d3.select(this).attr("fill", "yellow").attr("stroke", "orange");
+                })
+                .on("mouseout", function(d) {
+                  self.fire('unHover');
+                  d3.select(this).attr("fill", "red").attr("stroke", "blue");
+                });
+      }
+    });
+  </script>
+</dom-module>
